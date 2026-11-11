@@ -1,0 +1,951 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retrieval Study Results</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb; --raised: #ffffff;
+  --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7;
+  --border: rgba(11,11,11,0.10); --hover: rgba(11,11,11,0.045); --focus: #2a78d6;
+  /* pipelines: categorical slots 1-3 */
+  --p-basic_hybrid: #2a78d6; --p-enriched_hybrid: #eb6834; --p-rewrite_enriched: #1baf7a;
+  /* judge score 1-5: diverging red <-> gray <-> blue */
+  --s1: #d03b3b; --s2: #f0a09a; --s3: #dcdbd4; --s4: #86b6ef; --s5: #2a78d6;
+  --s1t: #fff; --s2t: #0b0b0b; --s3t: #0b0b0b; --s4t: #0b0b0b; --s5t: #fff;
+  --pos: #2a78d6; --neg: #e34948; --up-text: #006300; --down-text: #b42f2f;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --raised: #222221;
+    --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835;
+    --border: rgba(255,255,255,0.10); --hover: rgba(255,255,255,0.05); --focus: #3987e5;
+    --p-basic_hybrid: #3987e5; --p-enriched_hybrid: #d95926; --p-rewrite_enriched: #199e70;
+    --s1: #e66767; --s2: #8f3c3c; --s3: #4a4a46; --s4: #1c5cab; --s5: #6da7ec;
+    --s1t: #0b0b0b; --s2t: #fff; --s3t: #fff; --s4t: #fff; --s5t: #0b0b0b;
+    --pos: #3987e5; --neg: #e66767; --up-text: #0ca30c; --down-text: #e66767;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --raised: #222221;
+  --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835;
+  --border: rgba(255,255,255,0.10); --hover: rgba(255,255,255,0.05); --focus: #3987e5;
+  --p-basic_hybrid: #3987e5; --p-enriched_hybrid: #d95926; --p-rewrite_enriched: #199e70;
+  --s1: #e66767; --s2: #8f3c3c; --s3: #4a4a46; --s4: #1c5cab; --s5: #6da7ec;
+  --s1t: #0b0b0b; --s2t: #fff; --s3t: #fff; --s4t: #fff; --s5t: #0b0b0b;
+  --pos: #3987e5; --neg: #e66767; --up-text: #0ca30c; --down-text: #e66767;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--page); color: var(--ink);
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; }
+button, input, select { font: inherit; color: inherit; }
+.num { font-variant-numeric: tabular-nums; }
+
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--page); }
+header.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10;
+  background: color-mix(in srgb, var(--page) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+}
+.top-inner {
+  max-width: 1320px; margin: 0 auto; padding-block: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.brand { font-weight: 650; font-size: 15px; letter-spacing: -0.01em; }
+.brand small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; }
+nav.tabs { display: flex; gap: 4px; }
+nav.tabs a {
+  text-decoration: none; padding: 6px 12px; border-radius: 8px; color: var(--ink2);
+}
+nav.tabs a:hover { background: var(--hover); }
+nav.tabs a.active { background: var(--raised); color: var(--ink); box-shadow: 0 0 0 1px var(--border); font-weight: 550; }
+.spacer { flex: 1; }
+.theme-btn { border: 1px solid var(--border); background: var(--raised); border-radius: 8px; padding: 5px 10px; cursor: pointer; color: var(--ink2); }
+
+main {
+  max-width: 1320px; margin: 0 auto; padding-block: 20px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+h1 { font-size: 22px; letter-spacing: -0.015em; margin: 4px 0 4px; font-weight: 650; }
+h2 { font-size: 15px; margin: 0 0 2px; font-weight: 620; }
+.sub { color: var(--ink2); margin: 0 0 16px; max-width: 900px; }
+.caption { color: var(--muted); font-size: 12.5px; margin: 0 0 12px; }
+
+.card {
+  background: var(--surface); border-radius: 12px; box-shadow: 0 0 0 1px var(--border);
+  padding: 16px 18px; min-width: 0;
+}
+.grid { display: grid; gap: 16px; }
+.cols-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+.cols-4 { grid-template-columns: repeat(4, minmax(0,1fr)); }
+.cols-2 { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+@media (max-width: 980px) { .cols-4 { grid-template-columns: repeat(2, minmax(0,1fr)); } .cols-3, .cols-2 { grid-template-columns: minmax(0,1fr); } }
+@media (max-width: 520px) { .cols-4 { grid-template-columns: minmax(0,1fr); } }
+.stack > * + * { margin-top: 16px; }
+
+/* stat tiles */
+.tile .label { display: flex; align-items: center; gap: 8px; color: var(--ink2); font-size: 13px; }
+.tile .value { font-size: 30px; font-weight: 620; letter-spacing: -0.02em; margin: 4px 0 2px; }
+.tile .delta { font-size: 13px; color: var(--ink2); }
+.up { color: var(--up-text); } .down { color: var(--down-text); }
+.swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--ink2); font-size: 12.5px; margin: 0 0 10px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { fill: var(--ink2); font-size: 11px; font-family: inherit; }
+svg .tick { fill: var(--muted); font-variant-numeric: tabular-nums; }
+svg .val { fill: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+svg .gridline { stroke: var(--grid); stroke-width: 1; }
+svg .baseline { stroke: var(--axis); stroke-width: 1; }
+svg .hit { fill: transparent; cursor: pointer; }
+svg .mark { transition: opacity .12s; }
+svg.dim-others:hover .mark { opacity: .35; }
+svg.dim-others .grp:hover .mark { opacity: 1; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin: 0 0 12px; }
+.seg { display: inline-flex; background: var(--page); border-radius: 8px; padding: 2px; box-shadow: inset 0 0 0 1px var(--border); }
+.seg button { border: 0; background: transparent; padding: 4px 10px; border-radius: 6px; cursor: pointer; color: var(--ink2); font-size: 13px; }
+.seg button.on { background: var(--raised); color: var(--ink); box-shadow: 0 0 0 1px var(--border); font-weight: 550; }
+.control-label { color: var(--muted); font-size: 12.5px; }
+input[type=search], select {
+  border: 1px solid var(--border); background: var(--raised); border-radius: 8px; padding: 6px 10px; min-width: 0;
+}
+input[type=search] { width: 280px; max-width: 100%; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* tooltip */
+#tip {
+  position: fixed; z-index: 50; pointer-events: none; opacity: 0; transition: opacity .08s;
+  background: var(--raised); color: var(--ink); border-radius: 8px; box-shadow: 0 0 0 1px var(--border), 0 6px 20px rgba(0,0,0,.14);
+  padding: 8px 10px; font-size: 12.5px; max-width: 320px;
+}
+#tip.show { opacity: 1; }
+#tip .t-title { font-weight: 600; margin-bottom: 4px; }
+#tip .t-row { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+#tip .t-row span:first-child { display: inline-flex; align-items: center; gap: 6px; color: var(--ink2); }
+
+/* table */
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--grid); vertical-align: top; }
+th { font-weight: 550; color: var(--ink2); font-size: 12.5px; white-space: nowrap; position: sticky; top: 0; background: var(--surface); }
+th.sortable { cursor: pointer; user-select: none; }
+th.sortable:hover { color: var(--ink); }
+th .arrow { color: var(--muted); font-size: 10px; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--hover); }
+td .best { font-weight: 650; }
+.qid { color: var(--muted); font-variant-numeric: tabular-nums; }
+.rewritten { color: var(--muted); font-size: 12px; display: block; }
+
+/* query page */
+.crumbs { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+.crumbs a { text-decoration: none; color: var(--ink2); }
+.crumbs a:hover { text-decoration: underline; }
+.pager { margin-left: auto; display: flex; gap: 6px; }
+.pager a { text-decoration: none; border: 1px solid var(--border); border-radius: 8px; padding: 3px 10px; background: var(--raised); color: var(--ink2); }
+.pager a:hover { color: var(--ink); }
+.qhead { display: grid; gap: 12px; grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+@media (max-width: 860px) { .qhead { grid-template-columns: minmax(0,1fr); } }
+.qbox h3 { margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+.qbox .q { font-size: 17px; font-weight: 560; }
+.qbox .reason { color: var(--ink2); font-size: 13px; margin-top: 6px; }
+
+.mtable td, .mtable th { padding: 6px 10px; }
+.mtable tbody tr { cursor: default; }
+.mtable tbody tr:hover { background: transparent; }
+
+.pcol h2 { display: flex; align-items: center; gap: 8px; }
+.pcol .pmeta { color: var(--muted); font-size: 12.5px; margin-bottom: 10px; }
+.result {
+  border-radius: 10px; padding: 10px 10px 10px 12px; margin: 0 -6px;
+  display: grid; grid-template-columns: 22px minmax(0,1fr) auto; gap: 4px 10px; align-items: start;
+  cursor: pointer; transition: background .1s;
+}
+.result + .result { border-top: 1px solid var(--grid); border-radius: 0 0 10px 10px; }
+.result:hover, .result.linked { background: var(--hover); }
+.result.linked { box-shadow: inset 3px 0 0 var(--focus); }
+.rank { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 13px; padding-top: 1px; }
+.rname { font-weight: 560; line-height: 1.35; }
+.rcat { color: var(--muted); font-size: 12px; }
+.rscores { grid-column: 2 / 4; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; display: flex; flex-wrap: wrap; gap: 2px 12px; }
+.rscores b { color: var(--ink2); font-weight: 550; }
+.elsewhere { grid-column: 2 / 4; font-size: 12px; color: var(--muted); display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.pill { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 0 8px; box-shadow: inset 0 0 0 1px var(--border); color: var(--ink2); font-variant-numeric: tabular-nums; }
+.chip {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 22px; padding: 0 6px;
+  border-radius: 6px; font-weight: 650; font-size: 12.5px; font-variant-numeric: tabular-nums;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.chip.s1 { background: var(--s1); color: var(--s1t); } .chip.s2 { background: var(--s2); color: var(--s2t); }
+.chip.s3 { background: var(--s3); color: var(--s3t); } .chip.s4 { background: var(--s4); color: var(--s4t); }
+.chip.s5 { background: var(--s5); color: var(--s5t); }
+.detail { grid-column: 2 / 4; display: none; font-size: 13px; color: var(--ink2); margin-top: 6px; }
+.result.open .detail { display: block; }
+.detail p { margin: 0 0 8px; }
+.detail .k { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; margin: 10px 0 3px; }
+.detail ul { margin: 0; padding-left: 18px; }
+.detail .rationale { background: var(--page); border-radius: 8px; padding: 8px 10px; box-shadow: inset 0 0 0 1px var(--border); }
+.kv { display: grid; grid-template-columns: max-content minmax(0,1fr); gap: 2px 12px; }
+.kv dt { color: var(--muted); } .kv dd { margin: 0; }
+
+/* walkthrough */
+.story { max-width: 940px; margin: 0 auto; }
+.strip {
+  position: sticky; top: var(--hh, 52px); z-index: 5; margin: 0 -4px 16px; padding: 8px 4px 10px;
+  background: color-mix(in srgb, var(--page) 92%, transparent); backdrop-filter: blur(8px);
+}
+.strip-cells { display: grid; grid-template-columns: repeat(50, minmax(0,1fr)); gap: 2px; }
+.strip-cells button {
+  position: relative; height: 20px; border: 0; padding: 0; border-radius: 3px; cursor: pointer;
+  background: var(--axis); font-size: 9px; color: var(--page); font-weight: 650; overflow: hidden;
+}
+.strip-cells button.drift { background: var(--neg); } .strip-cells button.help { background: var(--pos); }
+.strip-cells button.amb::after { content: ""; position: absolute; left: 2px; right: 2px; bottom: 2px; height: 3px; border-radius: 2px; background: var(--page); opacity: .85; }
+.strip-cells button.cur { outline: 2px solid var(--ink); outline-offset: 1px; }
+@media (max-width: 700px) { .strip-cells button { font-size: 0; } }
+.strip-foot { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; margin-top: 6px; font-size: 12px; color: var(--ink2); }
+.strip-foot span { display: inline-flex; align-items: center; gap: 5px; }
+.strip-foot .spacer { flex: 1; }
+.linkbtn { border: 1px solid var(--border); background: var(--raised); border-radius: 8px; padding: 2px 10px; cursor: pointer; color: var(--ink2); font-size: 12px; }
+.qsec, .story-block { scroll-margin-top: calc(var(--hh, 52px) + 64px); margin-bottom: 16px; }
+.qsec-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.qsec-head .more { margin-left: auto; font-size: 12.5px; color: var(--ink2); text-decoration: none; }
+.qsec-head .more:hover { text-decoration: underline; }
+.badge { white-space: nowrap; font-size: 11.5px; border-radius: 999px; padding: 1px 9px; box-shadow: inset 0 0 0 1px var(--border); color: var(--ink2); }
+.badge.amb { background: var(--ink); color: var(--page); box-shadow: none; }
+.qsec .q { font-size: 18px; font-weight: 580; letter-spacing: -0.01em; }
+.qsec .rw { color: var(--ink2); font-size: 13px; margin: 4px 0 12px; }
+.qsec .rw .k { color: var(--muted); font-size: 12px; display: inline-flex; align-items: center; gap: 5px; margin-right: 4px; }
+.qsec mark { background: color-mix(in srgb, var(--p-rewrite_enriched) 24%, transparent); color: inherit; border-radius: 3px; padding: 0 2px; }
+.sbars { display: grid; grid-template-columns: 96px minmax(0,1fr) 34px; gap: 3px 10px; align-items: center; margin-bottom: 12px; }
+.sbar-l { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink2); }
+.track { height: 12px; background: var(--grid); border-radius: 4px; overflow: hidden; }
+.track i { display: block; height: 100%; border-radius: 4px; }
+.sbar-m { grid-column: 2 / 4; color: var(--muted); font-size: 11.5px; margin: -2px 0 4px; }
+.notes > * + * { margin-top: 8px; }
+.note { background: var(--page); border-radius: 8px; padding: 8px 12px; box-shadow: inset 3px 0 0 var(--axis), inset 0 0 0 1px var(--border); font-size: 13px; color: var(--ink2); }
+.note b { color: var(--ink); display: block; margin-bottom: 1px; }
+.note.drift { box-shadow: inset 3px 0 0 var(--neg), inset 0 0 0 1px var(--border); }
+.note.help { box-shadow: inset 3px 0 0 var(--pos), inset 0 0 0 1px var(--border); }
+.top3 { margin-top: 10px; font-size: 13px; }
+.top3 summary { cursor: pointer; color: var(--ink2); font-size: 12.5px; }
+.top3 .grid { margin-top: 8px; gap: 10px; }
+.top3 h4 { margin: 0 0 4px; font-size: 12px; font-weight: 600; color: var(--ink2); display: flex; align-items: center; gap: 6px; }
+.top3 ol { list-style: none; margin: 0; padding: 0; }
+.top3 li { display: grid; grid-template-columns: 30px minmax(0,1fr); gap: 6px; align-items: start; padding: 3px 0; line-height: 1.35; }
+.story-block h2 { font-size: 16px; margin-bottom: 6px; }
+.story-block p { margin: 0 0 10px; color: var(--ink2); max-width: 760px; }
+.story-block p b { color: var(--ink); }
+.qlinks { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+.qlinks a { text-decoration: none; font-size: 12.5px; }
+.qlinks a:hover .pill { color: var(--ink); }
+
+.empty { color: var(--muted); padding: 24px 0; text-align: center; }
+.err { color: var(--down-text); }
+footer { color: var(--muted); font-size: 12px; margin-top: 32px; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">LLM-Augmented Hybrid Retrieval<small id="meta-line">Loading results…</small></div>
+    <nav class="tabs">
+      <a href="#/" data-tab="overview">Overview</a>
+      <a href="#/queries" data-tab="queries">Queries</a>
+      <a href="#/story" data-tab="story">Walkthrough</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="theme-btn" id="theme-btn" type="button" aria-label="Toggle colour theme">Theme</button>
+  </div>
+</header>
+<main id="app"><p class="empty">Loading results…</p></main>
+<div id="tip" role="tooltip"></div>
+
+<script>
+"use strict";
+
+const PIPES = ["basic_hybrid", "enriched_hybrid", "rewrite_enriched"];
+const LABEL = { basic_hybrid: "Basic hybrid", enriched_hybrid: "Enriched hybrid", rewrite_enriched: "Rewrite + enriched" };
+const SHORT = { basic_hybrid: "Basic", enriched_hybrid: "Enriched", rewrite_enriched: "Rewrite" };
+const METRICS = [
+  { key: "mean_judge_score", q: "mean_judge_score", label: "Mean judge score", short: "Judge", max: 5, fmt: v => v.toFixed(3) },
+  { key: "mean_ndcg_at_5", q: "ndcg_at_5", label: "NDCG@5", short: "NDCG@5", max: 1, fmt: v => v.toFixed(4) },
+  { key: "mean_ndcg_at_10", q: "ndcg_at_10", label: "NDCG@10", short: "NDCG@10", max: 1, fmt: v => v.toFixed(4) },
+  { key: "mean_mrr", q: "mrr", label: "MRR", short: "MRR", max: 1, fmt: v => v.toFixed(4) },
+];
+const SCORE_LABEL = { 1: "Completely irrelevant", 2: "Slightly relevant", 3: "Moderately relevant", 4: "Highly relevant", 5: "Perfectly relevant" };
+const COMPARISONS = [
+  { id: "rw-en", a: "rewrite_enriched", b: "enriched_hybrid", label: "Rewrite − Enriched" },
+  { id: "en-ba", a: "enriched_hybrid", b: "basic_hybrid", label: "Enriched − Basic" },
+  { id: "rw-ba", a: "rewrite_enriched", b: "basic_hybrid", label: "Rewrite − Basic" },
+];
+
+let DATA = null;
+let QUERY_IDS = [];
+const BYQ = {};          // pipeline -> query_id -> per-query record
+const state = {
+  deltaCmp: "rw-en", deltaMetric: "mean_judge_score",
+  tableMetric: "mean_judge_score", tableSort: { col: "id", dir: 1 }, filter: "",
+};
+
+// ---------- utils ----------
+const $ = (sel, el = document) => el.querySelector(sel);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const pc = p => `var(--p-${p})`;
+const sw = p => `<i class="swatch" style="background:${pc(p)}"></i>`;
+const sign = (v, d) => (v > 0 ? "+" : v < 0 ? "−" : "±") + Math.abs(v).toFixed(d);
+const pct = (a, b) => ((a - b) / b) * 100;
+const qMetric = (rec, m) => rec[METRICS.find(x => x.key === m).q];
+function topRounded(x, y, w, h, r) {
+  // bar with rounded data-end (top), square at the baseline
+  if (h <= 0) return "";
+  r = Math.min(r, h, w / 2);
+  return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
+}
+function vBar(x, base, w, val, scale, r = 4) {
+  // signed vertical bar; rounded on the end away from the baseline
+  const h = Math.abs(val) * scale;
+  if (h < 0.5) return `M${x},${base - 0.5}h${w}v1h${-w}Z`;
+  r = Math.min(r, h, w / 2);
+  if (val >= 0) return topRounded(x, base - h, w, h, r);
+  const y = base + h;
+  return `M${x},${base}V${y - r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y - r}V${base}Z`;
+}
+
+// ---------- tooltip ----------
+const tip = $("#tip");
+function showTip(html, ev) { tip.innerHTML = html; tip.classList.add("show"); moveTip(ev); }
+function moveTip(ev) {
+  const pad = 14, r = tip.getBoundingClientRect();
+  let x = ev.clientX + pad, y = ev.clientY + pad;
+  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - pad;
+  if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - pad;
+  tip.style.left = Math.max(8, x) + "px"; tip.style.top = Math.max(8, y) + "px";
+}
+function hideTip() { tip.classList.remove("show"); }
+function bindTips(root, getHtml) {
+  root.querySelectorAll("[data-tip]").forEach(el => {
+    el.addEventListener("mouseenter", ev => showTip(getHtml(el.dataset.tip), ev));
+    el.addEventListener("mousemove", moveTip);
+    el.addEventListener("mouseleave", hideTip);
+  });
+}
+
+// ---------- theme ----------
+(function initTheme() {
+  let saved = null;
+  try { saved = localStorage.getItem("theme"); } catch (e) {}
+  if (saved) document.documentElement.dataset.theme = saved;
+  $("#theme-btn").addEventListener("click", () => {
+    const cur = document.documentElement.dataset.theme
+      || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    const next = cur === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+})();
+
+// ---------- overview ----------
+function renderOverview() {
+  const agg = p => DATA.pipelines[p].aggregate_metrics;
+  const base = agg("basic_hybrid").mean_judge_score;
+  const md = DATA.metadata;
+  const tiles = PIPES.map(p => {
+    const v = agg(p).mean_judge_score;
+    const d = p === "basic_hybrid" ? `<span>baseline</span>`
+      : `<span class="${v >= base ? "up" : "down"}">${sign(pct(v, base), 1)}%</span> vs basic`;
+    return `<div class="card tile">
+      <div class="label">${sw(p)}${LABEL[p]}</div>
+      <div class="value">${v.toFixed(3)}</div>
+      <div class="delta">mean judge score (1–5) · ${d}</div></div>`;
+  }).join("");
+
+  const metricPanels = METRICS.map(m => `<div class="card"><h2>${m.label}</h2>
+    <p class="caption">${m.max === 5 ? "Mean over 50 queries × top-10, judged 1–5" : "Mean over 50 queries"}</p>
+    <div data-metric-chart="${m.key}"></div></div>`).join("");
+
+  $("#app").innerHTML = `
+    <h1>Results overview</h1>
+    <p class="sub">${md.query_count} vague queries over a ${md.product_count.toLocaleString()}-product construction-waste corpus,
+      run through three hybrid (BM25 + dense) pipelines and scored by a pooled LLM judge.
+      Everything here is read from the study's saved outputs; nothing is re-run.</p>
+    <div class="grid cols-3">${tiles}</div>
+    <div class="legend" style="margin-top:20px">${PIPES.map(p => `<span>${sw(p)}${LABEL[p]}</span>`).join("")}</div>
+    <div class="grid cols-4">${metricPanels}</div>
+    <div class="grid cols-2" style="margin-top:16px">
+      <div class="card"><h2>Judge score distribution</h2>
+        <p class="caption">All 500 retrieved results per pipeline (50 queries × top-10), by judged relevance</p>
+        <div class="legend">${[1, 2, 3, 4, 5].map(s => `<span><i class="swatch" style="background:var(--s${s});box-shadow:inset 0 0 0 1px var(--border)"></i>${s} · ${SCORE_LABEL[s]}</span>`).join("")}</div>
+        <div id="dist-chart"></div></div>
+      <div class="card"><h2>Where the pipelines win and lose</h2>
+        <p class="caption">Per-query mean judge score — share of the 50 queries where each pipeline is best (ties counted for all)</p>
+        <div id="wins"></div></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h2>Per-query difference</h2>
+      <p class="caption">Each bar is one query, sorted by difference. Bars below zero are queries where the first pipeline did worse — for Rewrite − Enriched these are the rewrite-drift cases. Click a bar to open the query.</p>
+      <div class="controls">
+        <span class="control-label">Compare</span>
+        <div class="seg" id="cmp-seg">${COMPARISONS.map(c => `<button data-v="${c.id}" class="${c.id === state.deltaCmp ? "on" : ""}">${c.label}</button>`).join("")}</div>
+        <span class="control-label">Metric</span>
+        <div class="seg" id="met-seg">${METRICS.map(m => `<button data-v="${m.key}" class="${m.key === state.deltaMetric ? "on" : ""}">${m.short}</button>`).join("")}</div>
+      </div>
+      <div id="delta-chart"></div>
+    </div>
+    <footer>Generated ${esc(new Date(md.generated_at_utc).toLocaleString())} · generation &amp; judge: ${esc(md.models.generation)} / ${esc(md.models.judge)} · embeddings: ${esc(md.models.embedding)}</footer>`;
+
+  METRICS.forEach(m => drawMetricChart($(`[data-metric-chart="${m.key}"]`), m));
+  drawDistribution($("#dist-chart"));
+  drawWins($("#wins"));
+  drawDelta();
+  for (const [id, key] of [["#cmp-seg", "deltaCmp"], ["#met-seg", "deltaMetric"]]) {
+    $(id).addEventListener("click", ev => {
+      const b = ev.target.closest("button"); if (!b) return;
+      state[key] = b.dataset.v;
+      $(id).querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+      drawDelta();
+    });
+  }
+}
+
+function drawMetricChart(el, m) {
+  const W = 260, H = 190, L = 30, R = 6, T = 22, B = 24;
+  const pw = W - L - R, ph = H - T - B;
+  const ticks = m.max === 5 ? [0, 1, 2, 3, 4, 5] : [0, 0.25, 0.5, 0.75, 1];
+  const y = v => T + ph - (v / m.max) * ph;
+  const slot = pw / 3, bw = Math.min(44, slot * 0.56);
+  const base = DATA.pipelines.basic_hybrid.aggregate_metrics[m.key];
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="dim-others" role="img" aria-label="${esc(m.label)} by pipeline">`;
+  ticks.forEach(t => {
+    s += `<line class="${t === 0 ? "baseline" : "gridline"}" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/>`;
+    s += `<text class="tick" x="${L - 6}" y="${y(t) + 3.5}" text-anchor="end">${m.max === 5 ? t : t.toFixed(2)}</text>`;
+  });
+  PIPES.forEach((p, i) => {
+    const v = DATA.pipelines[p].aggregate_metrics[m.key];
+    const cx = L + slot * i + slot / 2, x = cx - bw / 2;
+    s += `<g class="grp"><path class="mark" d="${topRounded(x, y(v), bw, y(0) - y(v), 4)}" fill="${pc(p)}"/>
+      <text class="val" x="${cx}" y="${y(v) - 6}" text-anchor="middle">${m.max === 5 ? v.toFixed(2) : v.toFixed(3)}</text>
+      <text x="${cx}" y="${H - 6}" text-anchor="middle">${SHORT[p]}</text>
+      <rect class="hit" x="${L + slot * i}" y="${T - 20}" width="${slot}" height="${ph + 20}" data-tip="${p}"/></g>`;
+  });
+  el.innerHTML = s + "</svg>";
+  bindTips(el, p => {
+    const v = DATA.pipelines[p].aggregate_metrics[m.key];
+    const d = p === "basic_hybrid" ? "" : `<div class="t-row"><span>vs basic</span><span class="num">${sign(v - base, 4)} (${sign(pct(v, base), 1)}%)</span></div>`;
+    return `<div class="t-title">${m.label}</div><div class="t-row"><span>${sw(p)}${LABEL[p]}</span><span class="num"><b>${m.fmt(v)}</b></span></div>${d}`;
+  });
+}
+
+function scoreCounts(p) {
+  const c = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  DATA.pipelines[p].per_query.forEach(q => q.judge_scores.forEach(j => { c[j.score] = (c[j.score] || 0) + 1; }));
+  return c;
+}
+
+function drawDistribution(el) {
+  // drawn at the container's real width so labels stay legible on phones
+  const W = Math.max(280, el.clientWidth || 560), rowH = 26, lab = 18, gap = 14, L = 0, R = 2, T = 0;
+  const H = T + PIPES.length * (lab + rowH + gap) - gap + 22;
+  const pw = W - L - R;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Judge score distribution by pipeline">`;
+  [0, 25, 50, 75, 100].forEach(t => {
+    const x = L + (t / 100) * pw;
+    s += `<text class="tick" x="${x}" y="${H - 4}" text-anchor="${t === 0 ? "start" : t === 100 ? "end" : "middle"}">${t}%</text>`;
+  });
+  PIPES.forEach((p, i) => {
+    const c = scoreCounts(p), total = Object.values(c).reduce((a, b) => a + b, 0);
+    const yy = T + i * (lab + rowH + gap) + lab;
+    s += `<text x="${L}" y="${yy - 6}" style="fill:var(--ink);font-size:12px">${LABEL[p]}</text>`;
+    let x = L;
+    [1, 2, 3, 4, 5].forEach((sc, k) => {
+      const w = (c[sc] / total) * pw;
+      const g = k < 4 ? 2 : 0;  // 2px surface gap between segments
+      const share = (c[sc] / total) * 100;
+      s += `<g><rect class="mark" x="${x}" y="${yy}" width="${Math.max(0, w - g)}" height="${rowH}" rx="${k === 0 || k === 4 ? 4 : 0}" fill="var(--s${sc})"/>`;
+      if (w > 34) s += `<text x="${x + (w - g) / 2}" y="${yy + rowH / 2 + 4}" text-anchor="middle" style="fill:var(--s${sc}t);font-weight:600" class="num">${share.toFixed(0)}%</text>`;
+      s += `<rect class="hit" x="${x}" y="${yy}" width="${w}" height="${rowH}" data-tip="${p}|${sc}|${c[sc]}|${total}"/></g>`;
+      x += w;
+    });
+  });
+  el.innerHTML = s + "</svg>";
+  bindTips(el, t => {
+    const [p, sc, n, total] = t.split("|");
+    return `<div class="t-title">${sw(p)} ${LABEL[p]}</div>
+      <div class="t-row"><span><i class="swatch" style="background:var(--s${sc})"></i>Score ${sc} · ${SCORE_LABEL[sc]}</span></div>
+      <div class="t-row"><span>Results</span><span class="num"><b>${n}</b> of ${total} (${(n / total * 100).toFixed(1)}%)</span></div>`;
+  });
+}
+
+function drawWins(el) {
+  const wins = Object.fromEntries(PIPES.map(p => [p, 0]));
+  QUERY_IDS.forEach(id => {
+    const vals = PIPES.map(p => BYQ[p][id].mean_judge_score);
+    const best = Math.max(...vals);
+    PIPES.forEach((p, i) => { if (vals[i] === best) wins[p]++; });
+  });
+  const relevant = p => {
+    const c = scoreCounts(p), t = Object.values(c).reduce((a, b) => a + b, 0);
+    return ((c[4] + c[5]) / t) * 100;
+  };
+  const top1 = p => DATA.pipelines[p].per_query.filter(q => q.judge_scores[0] && q.judge_scores[0].score >= 4).length;
+  el.innerHTML = `<div class="table-wrap"><table class="mtable">
+    <thead><tr><th>Pipeline</th><th class="n">Best on</th><th class="n">Results judged 4–5</th><th class="n">Rank-1 judged 4–5</th></tr></thead>
+    <tbody>${PIPES.map(p => `<tr><td style="white-space:nowrap">${sw(p)} ${LABEL[p]}</td>
+      <td class="n">${wins[p]} / ${QUERY_IDS.length}</td>
+      <td class="n">${relevant(p).toFixed(1)}%</td>
+      <td class="n">${top1(p)} / ${QUERY_IDS.length}</td></tr>`).join("")}</tbody></table></div>
+    <p class="caption" style="margin-top:12px">“Best on” counts queries where a pipeline has the highest mean judge score; ties count for every tied pipeline, so the column can sum past 50.</p>`;
+}
+
+function drawDelta() {
+  const el = $("#delta-chart");
+  const cmp = COMPARISONS.find(c => c.id === state.deltaCmp);
+  const m = METRICS.find(x => x.key === state.deltaMetric);
+  const rows = QUERY_IDS.map(id => {
+    const a = qMetric(BYQ[cmp.a][id], m.key), b = qMetric(BYQ[cmp.b][id], m.key);
+    return { id, a, b, d: a - b, text: BYQ[cmp.a][id].query_text };
+  }).sort((x, y) => y.d - x.d || x.id.localeCompare(y.id));
+  const W = Math.max(300, el.clientWidth || 1000), H = W < 600 ? 220 : 260, L = 40, R = 4, T = 14, B = 10;
+  const pw = W - L - R, ph = H - T - B;
+  const maxAbs = Math.max(...rows.map(r => Math.abs(r.d)), m.max === 5 ? 0.5 : 0.1);
+  const step = m.max === 5 ? (maxAbs > 1.5 ? 1 : 0.5) : (maxAbs > 0.4 ? 0.2 : 0.1);
+  const lim = Math.ceil(maxAbs / step) * step;
+  const y = v => T + ph / 2 - (v / lim) * (ph / 2);
+  const slot = pw / rows.length, bw = Math.max(2, slot - (slot > 10 ? 4 : 2));
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="dim-others" role="img" aria-label="Per-query ${esc(cmp.label)} difference in ${esc(m.label)}">`;
+  for (let t = -lim; t <= lim + 1e-9; t += step) {
+    const tv = Math.round(t * 100) / 100;
+    s += `<line class="${tv === 0 ? "baseline" : "gridline"}" x1="${L}" x2="${W - R}" y1="${y(tv)}" y2="${y(tv)}"/>`;
+    s += `<text class="tick" x="${L - 6}" y="${y(tv) + 3.5}" text-anchor="end">${tv > 0 ? "+" : ""}${tv.toFixed(m.max === 5 ? 1 : 2)}</text>`;
+  }
+  rows.forEach((r, i) => {
+    const x = L + i * slot + (slot - bw) / 2;
+    const col = r.d > 0 ? "var(--pos)" : r.d < 0 ? "var(--neg)" : "var(--axis)";
+    s += `<g class="grp"><path class="mark" d="${vBar(x, y(0), bw, r.d, (ph / 2) / lim, 3)}" fill="${col}"/>
+      <rect class="hit" x="${L + i * slot}" y="${T}" width="${slot}" height="${ph}" data-tip="${i}" data-href="#/q/${r.id}"/></g>`;
+  });
+  const up = rows.filter(r => r.d > 1e-9).length, down = rows.filter(r => r.d < -1e-9).length;
+  el.innerHTML = s + `</svg><div class="legend" style="justify-content:space-between;margin:8px 0 0">
+    <span><i class="swatch" style="background:var(--pos)"></i>${SHORT[cmp.a]} better on ${up}</span>
+    <span>tied on ${rows.length - up - down}</span>
+    <span><i class="swatch" style="background:var(--neg)"></i>${SHORT[cmp.a]} worse on ${down}</span></div>`;
+  bindTips(el, i => {
+    const r = rows[+i];
+    return `<div class="t-title"><span class="qid">${r.id}</span> ${esc(r.text)}</div>
+      <div class="t-row"><span>${sw(cmp.a)}${LABEL[cmp.a]}</span><span class="num">${m.fmt(r.a)}</span></div>
+      <div class="t-row"><span>${sw(cmp.b)}${LABEL[cmp.b]}</span><span class="num">${m.fmt(r.b)}</span></div>
+      <div class="t-row"><span>Difference</span><span class="num ${r.d > 0 ? "up" : r.d < 0 ? "down" : ""}"><b>${sign(r.d, m.max === 5 ? 2 : 4)}</b></span></div>`;
+  });
+  el.querySelectorAll("[data-href]").forEach(h => h.addEventListener("click", () => go(h.dataset.href)));
+}
+
+// ---------- queries table ----------
+function renderQueries() {
+  $("#app").innerHTML = `
+    <h1>Queries</h1>
+    <p class="sub">All ${QUERY_IDS.length} test queries with per-pipeline scores. Click a column to sort, click a row to see the ranked results side by side.</p>
+    <div class="card">
+      <div class="controls">
+        <input type="search" id="qfilter" placeholder="Filter queries or rewrites…" value="${esc(state.filter)}" aria-label="Filter queries">
+        <span class="control-label">Metric</span>
+        <div class="seg" id="tmet">${METRICS.map(m => `<button data-v="${m.key}" class="${m.key === state.tableMetric ? "on" : ""}">${m.short}</button>`).join("")}</div>
+      </div>
+      <div class="table-wrap" id="qtable"></div>
+    </div>`;
+  $("#qfilter").addEventListener("input", ev => { state.filter = ev.target.value; drawTable(); });
+  $("#tmet").addEventListener("click", ev => {
+    const b = ev.target.closest("button"); if (!b) return;
+    state.tableMetric = b.dataset.v;
+    $("#tmet").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+    drawTable();
+  });
+  drawTable();
+}
+
+function drawTable() {
+  const m = METRICS.find(x => x.key === state.tableMetric);
+  const f = state.filter.trim().toLowerCase();
+  let rows = QUERY_IDS.map(id => {
+    const r = { id, text: BYQ.basic_hybrid[id].query_text, rewrite: BYQ.rewrite_enriched[id].effective_query };
+    PIPES.forEach(p => { r[p] = qMetric(BYQ[p][id], m.key); });
+    r.dEB = r.enriched_hybrid - r.basic_hybrid;
+    r.dRE = r.rewrite_enriched - r.enriched_hybrid;
+    return r;
+  });
+  if (f) rows = rows.filter(r => (r.id + " " + r.text + " " + r.rewrite).toLowerCase().includes(f));
+  const { col, dir } = state.tableSort;
+  rows.sort((a, b) => {
+    const va = a[col], vb = b[col];
+    const c = typeof va === "string" ? va.localeCompare(vb) : va - vb;
+    return c * dir || a.id.localeCompare(b.id);
+  });
+  const fmtV = v => m.max === 5 ? v.toFixed(2) : v.toFixed(3);
+  const fmtD = v => `<span class="${v > 1e-9 ? "up" : v < -1e-9 ? "down" : ""}">${sign(v, m.max === 5 ? 2 : 3)}</span>`;
+  const head = (c, label, cls = "") => `<th class="sortable ${cls}" data-col="${c}">${label} <span class="arrow">${col === c ? (dir > 0 ? "▲" : "▼") : ""}</span></th>`;
+  const html = `<table>
+    <thead><tr>${head("id", "ID")}${head("text", "Query")}
+      ${PIPES.map(p => head(p, `${sw(p)} ${SHORT[p]}`, "n")).join("")}
+      ${head("dEB", "Δ Enriched − Basic", "n")}${head("dRE", "Δ Rewrite − Enriched", "n")}</tr></thead>
+    <tbody>${rows.length ? rows.map(r => {
+      const best = Math.max(...PIPES.map(p => r[p]));
+      return `<tr data-id="${r.id}"><td class="qid">${r.id}</td>
+        <td>${esc(r.text)}<span class="rewritten">→ ${esc(r.rewrite)}</span></td>
+        ${PIPES.map(p => `<td class="n"><span class="${r[p] === best ? "best" : ""}">${fmtV(r[p])}</span></td>`).join("")}
+        <td class="n">${fmtD(r.dEB)}</td><td class="n">${fmtD(r.dRE)}</td></tr>`;
+    }).join("") : `<tr><td colspan="7" class="empty">No queries match “${esc(state.filter)}”.</td></tr>`}</tbody></table>
+    <p class="caption" style="margin-top:10px">Showing ${rows.length} of ${QUERY_IDS.length} · ${m.label} per query · bold = best in row · the grey line under each query is the LLM rewrite used by Rewrite + enriched.</p>`;
+  const wrap = $("#qtable");
+  wrap.innerHTML = html;
+  wrap.querySelectorAll("th.sortable").forEach(th => th.addEventListener("click", () => {
+    const c = th.dataset.col;
+    state.tableSort = { col: c, dir: state.tableSort.col === c ? -state.tableSort.dir : (c === "id" || c === "text" ? 1 : -1) };
+    drawTable();
+  }));
+  wrap.querySelectorAll("tbody tr[data-id]").forEach(tr => tr.addEventListener("click", () => go(`#/q/${tr.dataset.id}`)));
+}
+
+// ---------- query detail ----------
+function judgeFor(rec, i) {
+  const r = rec.results[i];
+  return rec.judge_scores[i] && rec.judge_scores[i].product_name === r.name ? rec.judge_scores[i]
+    : rec.judge_scores.find(x => x.product_name === r.name) || { score: 1, rationale: "" };
+}
+
+function renderQuery(id) {
+  if (!BYQ.basic_hybrid[id]) { $("#app").innerHTML = `<p class="empty">Unknown query “${esc(id)}”. <a href="#/queries">Back to queries</a></p>`; return; }
+  const idx = QUERY_IDS.indexOf(id);
+  const prev = QUERY_IDS[idx - 1], next = QUERY_IDS[idx + 1];
+  const base = BYQ.basic_hybrid[id], rw = BYQ.rewrite_enriched[id];
+  const meta = rw.metadata || {};
+
+  // product_index -> {pipeline: rank}
+  const ranks = {};
+  PIPES.forEach(p => BYQ[p][id].results.forEach(r => { (ranks[r.product_index] ||= {})[p] = r.rank; }));
+
+  const metricRows = METRICS.map(m => {
+    const vals = PIPES.map(p => qMetric(BYQ[p][id], m.key));
+    const best = Math.max(...vals);
+    return `<tr><td>${m.label}</td>${vals.map(v => `<td class="n"><span class="${v === best ? "best" : ""}">${m.fmt(v)}</span></td>`).join("")}</tr>`;
+  }).join("");
+
+  const cols = PIPES.map(p => {
+    const rec = BYQ[p][id];
+    const items = rec.results.map((r, i) => {
+      const j = judgeFor(rec, i);
+      const prod = DATA.products[r.product_index] || {};
+      const others = PIPES.filter(o => o !== p).map(o => ranks[r.product_index][o]
+        ? `<span class="pill">${sw(o)}${SHORT[o]} #${ranks[r.product_index][o]}</span>` : "").join("");
+      const attrs = [
+        ["Materials", (prod.materials || []).join(", ")], ["Condition", prod.condition], ["Dimensions", prod.dimensions],
+        ["Weight", prod.weight_kg != null ? prod.weight_kg + " kg" : ""], ["Origin", prod.origin_process],
+        ["Reuse", (prod.reuse_applications || []).join(", ")], ["Compliance", (prod.compliance_tags || []).join(", ")],
+      ].filter(a => a[1]);
+      return `<div class="result" data-pi="${r.product_index}" tabindex="0">
+        <div class="rank">${r.rank}</div>
+        <div><div class="rname">${esc(r.name)}</div><div class="rcat">${esc(r.category)}</div></div>
+        <span class="chip s${j.score}" title="Judge score ${j.score}: ${SCORE_LABEL[j.score]}">${j.score}</span>
+        <div class="rscores"><span>fused <b>${r.score.toFixed(3)}</b></span><span>BM25 ${r.bm25_score.toFixed(3)}</span><span>dense ${r.dense_score.toFixed(3)}</span></div>
+        <div class="elsewhere">${others ? "Also in " + others : "Only in this pipeline"}</div>
+        <div class="detail">
+          <div class="k">Judge · ${j.score} ${SCORE_LABEL[j.score]}</div>
+          <div class="rationale">${esc(j.rationale) || "<i>No rationale recorded.</i>"}</div>
+          <div class="k">Listing</div><p>${esc(r.description || prod.description)}</p>
+          ${attrs.length ? `<dl class="kv">${attrs.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` : ""}
+          ${(prod.enriched_queries || []).length ? `<div class="k">LLM enrichment · “user might search for”</div><ul>${prod.enriched_queries.map(q => `<li>${esc(q)}</li>`).join("")}</ul>` : ""}
+        </div></div>`;
+    }).join("");
+    return `<div class="card pcol"><h2>${sw(p)}${LABEL[p]}</h2>
+      <div class="pmeta num">judge ${rec.mean_judge_score.toFixed(2)} · NDCG@10 ${rec.ndcg_at_10.toFixed(3)} · MRR ${rec.mrr.toFixed(3)}</div>${items}</div>`;
+  }).join("");
+
+  $("#app").innerHTML = `
+    <div class="crumbs"><a href="#/queries">Queries</a><span>/</span><span>${id}</span>
+      <span class="pager">${prev ? `<a href="#/q/${prev}" title="Previous query (←)">← ${prev}</a>` : ""}${next ? `<a href="#/q/${next}" title="Next query (→)">${next} →</a>` : ""}</span></div>
+    <div class="qhead" style="margin:8px 0 16px">
+      <div class="card qbox"><h3>User query</h3><div class="q">${esc(base.query_text)}</div>
+        <div class="reason">Used as-is by Basic hybrid and Enriched hybrid.</div></div>
+      <div class="card qbox"><h3>${sw("rewrite_enriched")} LLM rewrite</h3><div class="q">${esc(rw.effective_query)}</div>
+        ${meta.rewrite_reasoning ? `<div class="reason">${esc(meta.rewrite_reasoning)}</div>` : ""}</div>
+    </div>
+    <div class="card" style="margin-bottom:16px"><div class="table-wrap"><table class="mtable">
+      <thead><tr><th>Metric</th>${PIPES.map(p => `<th class="n">${sw(p)} ${LABEL[p]}</th>`).join("")}</tr></thead>
+      <tbody>${metricRows}</tbody></table></div></div>
+    <div class="legend">Judge score: ${[1, 2, 3, 4, 5].map(s => `<span><span class="chip s${s}">${s}</span>${SCORE_LABEL[s]}</span>`).join("")}</div>
+    <p class="caption">Hover a result to highlight the same product in the other pipelines; click it for the judge's rationale, listing details and the enrichment text.</p>
+    <div class="grid cols-3">${cols}</div>`;
+
+  const app = $("#app");
+  app.querySelectorAll(".result").forEach(el => {
+    const pi = el.dataset.pi;
+    el.addEventListener("mouseenter", () => app.querySelectorAll(`.result[data-pi="${pi}"]`).forEach(x => x.classList.add("linked")));
+    el.addEventListener("mouseleave", () => app.querySelectorAll(".result.linked").forEach(x => x.classList.remove("linked")));
+    const toggle = () => el.classList.toggle("open");
+    el.addEventListener("click", ev => { if (!ev.target.closest(".detail")) toggle(); });
+    el.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toggle(); } });
+  });
+}
+
+// ---------- walkthrough ----------
+// A query counts as "names a material" if it contains one of these catalogue nouns; otherwise it is
+// treated as ambiguous. ponytail: word list fitted to these 50 queries, not a general classifier.
+const MATERIAL_WORDS = new Set(("wood plank brick concrete block steel beam tile insulation pipe offcut door copper cable "
+  + "glass cullet timber roof panel metal plastic sheet plasterboard aluminum aluminium carpet radiator window stone "
+  + "wire chip flooring cladding roofing").split(" "));
+const STOPWORDS = new Set(("a an and or the of for to in on with by as such is are be that this from it its into "
+  + "suitable use using used focusing prioritizing").split(" "));
+const NOTABLE = 0.3;  // judge-score change called out as a real effect (per-query means move in 0.1 steps)
+const words = s => String(s).toLowerCase().match(/[a-z]+/g) || [];
+const stem = w => w.length > 3 && w.endsWith("s") && !w.endsWith("ss") ? w.slice(0, -1) : w;
+const d1 = v => Math.round(v * 10) / 10;
+let storyObs = null;
+
+function storyRow(id) {
+  const [b, e, w] = PIPES.map(p => BYQ[p][id]);
+  const orig = new Set(words(b.query_text).map(stem));
+  const added = new Set(words(w.effective_query).filter(x => x.length > 2 && !STOPWORDS.has(x) && !orig.has(stem(x))));
+  return {
+    id, text: b.query_text, rewrite: w.effective_query, reasoning: (w.metadata || {}).rewrite_reasoning, added,
+    amb: !words(b.query_text).some(x => MATERIAL_WORDS.has(stem(x))),
+    b: b.mean_judge_score, e: e.mean_judge_score, w: w.mean_judge_score,
+    dEB: d1(e.mean_judge_score - b.mean_judge_score), dRE: d1(w.mean_judge_score - e.mean_judge_score),
+  };
+}
+
+function storyNotes(r) {
+  if (Math.max(r.b, r.e, r.w) <= 1) return [["info", "Nothing relevant to find",
+    "Every pipeline scores 1.0: the catalogue has no matching product, so no retrieval strategy can help. A production system should notice this and say so."]];
+  const n = [];
+  if (r.dRE <= -NOTABLE) n.push(["drift", `Rewrite drift · ${sign(r.dRE, 1)} vs enriched`, r.amb
+    ? "The query was vague, but the rewriter committed to one reading of it and the results followed that reading instead of the user's."
+    : "The user had already named what they wanted. The rewriter narrowed it with materials, uses or quality terms the user never said (highlighted above), and retrieval matched those instead."]);
+  else if (r.dRE >= NOTABLE) n.push(["help", `Rewriting helped · ${sign(r.dRE, 1)} vs enriched`, r.amb
+    ? "The query names no material, so there was intent to fill in. The rewrite supplied it and retrieval had something concrete to match."
+    : "An exception: the query was already specific, yet the rewrite's wording happened to line up better with how the catalogue names this product."]);
+  if (r.dEB >= NOTABLE) n.push(["help", `Enrichment helped · ${sign(r.dEB, 1)} vs basic`,
+    "The LLM-written “user might search for” lines on each listing bridged the gap between the buyer's words and the catalogue's."]);
+  else if (r.dEB <= -NOTABLE) n.push(["drift", `Enrichment hurt · ${sign(r.dEB, 1)} vs basic`,
+    "The added informal text let looser matches in; the plain index already fitted this query well."]);
+  if (!n.length) n.push(["info", "No real difference", `Neither enrichment nor rewriting moved the mean judge score by ${NOTABLE} or more on this query.`]);
+  return n;
+}
+
+function storySection(r) {
+  const marked = r.rewrite.split(/([A-Za-z]+)/).map(t => r.added.has(t.toLowerCase()) ? `<mark>${esc(t)}</mark>` : esc(t)).join("");
+  const bars = PIPES.map(p => {
+    const rec = BYQ[p][r.id], v = rec.mean_judge_score;
+    return `<span class="sbar-l">${sw(p)}${SHORT[p]}</span>
+      <span class="track"><i style="width:${(v / 5) * 100}%;background:${pc(p)}"></i></span>
+      <span class="num"><b>${v.toFixed(1)}</b></span>
+      <span class="sbar-m num">NDCG@10 ${rec.ndcg_at_10.toFixed(3)} · MRR ${rec.mrr.toFixed(3)}</span>`;
+  }).join("");
+  const notes = storyNotes(r);
+  const top3 = PIPES.map(p => {
+    const rec = BYQ[p][r.id];
+    return `<div><h4>${sw(p)}${LABEL[p]}</h4><ol>${rec.results.slice(0, 3).map((x, i) => {
+      const s = judgeFor(rec, i).score;
+      return `<li><span class="chip s${s}" title="Judge score ${s}: ${SCORE_LABEL[s]}">${s}</span><span>${esc(x.name)}</span></li>`;
+    }).join("")}</ol></div>`;
+  }).join("");
+  return `<section class="card qsec" id="s-${r.id}" data-id="${r.id}">
+    <div class="qsec-head"><span class="qid">${r.id}</span>
+      <span class="badge ${r.amb ? "amb" : ""}">${r.amb ? "Ambiguous" : "Names a material"}</span>
+      <a class="more" href="#/q/${r.id}">All 10 results →</a></div>
+    <div class="q">${esc(r.text)}</div>
+    <div class="rw"><span class="k">${sw("rewrite_enriched")}Rewritten as</span>${marked}</div>
+    <div class="sbars" role="img" aria-label="Mean judge score per pipeline: basic ${r.b}, enriched ${r.e}, rewrite ${r.w}">${bars}</div>
+    <div class="notes">${notes.map(([k, t, body]) => `<div class="note ${k}"><b>${t}</b>${body}</div>`).join("")}</div>
+    <details class="top3"${notes.some(x => x[0] === "drift") ? " open" : ""}><summary>Top 3 results per pipeline, with judge scores</summary>
+      <div class="grid cols-3">${top3}</div></details>
+  </section>`;
+}
+
+function storyConclusion(rows) {
+  const agg = p => DATA.pipelines[p].aggregate_metrics.mean_judge_score;
+  const tally = (rs, k) => ({
+    up: rs.filter(r => r[k] > 0).length, same: rs.filter(r => r[k] === 0).length, down: rs.filter(r => r[k] < 0).length,
+    mean: rs.reduce((s, r) => s + r[k], 0) / rs.length,
+  });
+  const share45 = p => { const c = scoreCounts(p); return ((c[4] + c[5]) / Object.values(c).reduce((a, b) => a + b, 0)) * 100; };
+  const amb = rows.filter(r => r.amb), spec = rows.filter(r => !r.amb);
+  const all = { en: tally(rows, "dEB"), rw: tally(rows, "dRE") };
+  const g = { amb: { en: tally(amb, "dEB"), rw: tally(amb, "dRE") }, spec: { en: tally(spec, "dEB"), rw: tally(spec, "dRE") } };
+  const links = rs => `<div class="qlinks">${rs.map(r => `<a href="#s-${r.id}" data-jump="${r.id}"><span class="pill"><span class="qid">${r.id}</span> ${esc(r.text)} <span class="num ${r.dRE > 0 ? "up" : "down"}">${sign(r.dRE, 1)}</span></span></a>`).join("")}</div>`;
+  const drifted = rows.filter(r => r.dRE <= -NOTABLE).sort((a, b) => a.dRE - b.dRE);
+  const helped = rows.filter(r => r.dRE >= NOTABLE).sort((a, b) => b.dRE - a.dRE);
+  const cell = t => `<td class="n"><span class="${t.mean > 0.005 ? "up" : t.mean < -0.005 ? "down" : ""}">${sign(t.mean, 2)}</span></td><td class="n">${t.up} / ${t.same} / ${t.down}</td>`;
+  return `<section class="story-block" id="s-end">
+    <h1 style="margin-top:28px">What the 50 queries add up to</h1>
+    <p class="sub">The interpretation below is computed from the same per-query scores you just scrolled past.</p>
+    <div class="card story-block">
+      <h2>1 · Enrichment is the dependable gain</h2>
+      <p>Adding LLM-written “user might search for” lines to every listing raised the mean judge score from
+        <b>${agg("basic_hybrid").toFixed(3)}</b> to <b>${agg("enriched_hybrid").toFixed(3)}</b>
+        (<span class="up">${sign(pct(agg("enriched_hybrid"), agg("basic_hybrid")), 1)}%</span>). It helped <b>${all.en.up}</b> queries and hurt
+        <b>${all.en.down}</b>, and lifted the share of results judged 4–5 from ${share45("basic_hybrid").toFixed(0)}% to ${share45("enriched_hybrid").toFixed(0)}%.
+        It works on ambiguous queries (${sign(g.amb.en.mean, 2)} on average) and on queries that name a material (${sign(g.spec.en.mean, 2)}).
+        Because the work is done once at indexing time, it costs nothing per search.</p>
+    </div>
+    <div class="card story-block">
+      <h2>2 · Rewriting helps only where there is ambiguity to resolve</h2>
+      <p>On top of enrichment, rewriting the query added just <b>${sign(pct(agg("rewrite_enriched"), agg("enriched_hybrid")), 1)}%</b>
+        (${agg("rewrite_enriched").toFixed(3)} vs ${agg("enriched_hybrid").toFixed(3)}). It helped <b>${all.rw.up}</b> queries and hurt <b>${all.rw.down}</b>,
+        so the average hides two different behaviours. Split by query type:</p>
+      <div class="table-wrap"><table class="mtable">
+        <thead><tr><th>Query type</th><th class="n">Queries</th><th class="n">Enrichment: mean Δ</th><th class="n">better / same / worse</th>
+          <th class="n">Rewriting: mean Δ</th><th class="n">better / same / worse</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge amb">Ambiguous</span></td><td class="n">${amb.length}</td>${cell(g.amb.en)}${cell(g.amb.rw)}</tr>
+          <tr><td><span class="badge">Names a material</span></td><td class="n">${spec.length}</td>${cell(g.spec.en)}${cell(g.spec.rw)}</tr>
+        </tbody></table></div>
+      <p class="caption" style="margin-top:8px">Δ is the change in mean judge score per query (enriched − basic, rewrite − enriched). A query is “ambiguous” when it names no material or product, e.g. “stuff for a retaining wall”.</p>
+      <p>On ambiguous queries rewriting supplied the missing intent and produced several of the biggest gains in the study.
+        On queries that already named a material it did not improve things on average and hurt more often than it helped.
+        The ${helped.length} queries where rewriting gained ${NOTABLE} points or more:</p>
+      <div class="caption">Ambiguous (${helped.filter(r => r.amb).length})</div>${links(helped.filter(r => r.amb))}
+      <div class="caption">Names a material (${helped.filter(r => !r.amb).length}): gains here mostly come from the rewrite happening to use the catalogue's own wording</div>${links(helped.filter(r => !r.amb))}
+    </div>
+    <div class="card story-block">
+      <h2>3 · Rewrite drift is the failure mode</h2>
+      <p>When the user has already said what they want, the rewriter still adds detail: sub-types, uses, quality constraints.
+        Hybrid retrieval matches those additions faithfully, and the results drift away from the request.
+        On ambiguous queries the same mechanism shows up as a wrong guess: the rewriter commits to one reading and the user meant another.
+        The ${drifted.length} queries where rewriting cost ${NOTABLE} points or more:</p>
+      <div class="caption">Names a material (${drifted.filter(r => !r.amb).length}): added specificity displaced what the user asked for</div>${links(drifted.filter(r => !r.amb))}
+      <div class="caption">Ambiguous (${drifted.filter(r => r.amb).length}): the rewriter guessed the wrong intent</div>${links(drifted.filter(r => r.amb))}
+      <p>So drift is a tendency, not a rule. Its cost is what makes rewriting every query a poor trade: the losses offset most of the gains.</p>
+    </div>
+    <div class="card story-block">
+      <h2>Recommendation</h2>
+      <p><b>Enrich documents by default.</b> It is the reliable improvement and it adds no latency at search time.</p>
+      <p><b>Rewrite queries selectively,</b> only when a query is detected as ambiguous, and preferably in a form that adds alternatives rather than constraints
+        (for example, retrieve with both the original and the rewrite and merge the lists). That keeps the gains on vague queries without paying for drift on precise ones,
+        or an LLM call on every search.</p>
+    </div>
+  </section>`;
+}
+
+function renderStory() {
+  const rows = QUERY_IDS.map(storyRow);
+  const cls = r => (r.dRE <= -NOTABLE ? "drift" : r.dRE >= NOTABLE ? "help" : "") + (r.amb ? " amb" : "");
+  $("#app").innerHTML = `<div class="story">
+    <h1>Query-by-query walkthrough</h1>
+    <p class="sub">Scroll through all ${rows.length} queries. Each card shows how the three pipelines scored, what the LLM rewrite added
+      (<mark style="background:color-mix(in srgb, var(--p-rewrite_enriched) 24%, transparent);border-radius:3px;padding:0 2px">highlighted</mark> words were not in the user's query),
+      and calls out effects of ${NOTABLE} judge points or more, rewrite drift included. The conclusion is at the end.</p>
+    <div class="strip" id="strip">
+      <div class="strip-cells">${rows.map(r => `<button type="button" class="${cls(r)}" data-jump="${r.id}" title="${r.id} · ${esc(r.text)} · rewrite ${sign(r.dRE, 1)}">${r.id.slice(1)}</button>`).join("")}</div>
+      <div class="strip-foot">
+        <span><i class="swatch" style="background:var(--neg)"></i>rewrite drift (≤ −${NOTABLE})</span>
+        <span><i class="swatch" style="background:var(--pos)"></i>rewrite helped (≥ +${NOTABLE})</span>
+        <span><i class="swatch" style="background:var(--axis)"></i>little change</span>
+        <span><i class="swatch" style="background:var(--axis);box-shadow:inset 0 -3px 0 var(--page)"></i>underline = ambiguous query</span>
+        <span class="spacer"></span><button type="button" class="linkbtn" data-jump="end">Jump to conclusion ↓</button>
+      </div>
+    </div>
+    ${rows.map(storySection).join("")}
+    ${storyConclusion(rows)}
+  </div>`;
+  document.documentElement.style.setProperty("--hh", $("header.top").offsetHeight + "px");
+
+  const app = $("#app");
+  app.querySelectorAll("[data-jump]").forEach(b => b.addEventListener("click", ev => {
+    ev.preventDefault();
+    const t = $(`#s-${b.dataset.jump}`);
+    if (t) t.scrollIntoView({ behavior: "smooth", block: "start" });
+  }));
+  const cells = Object.fromEntries([...app.querySelectorAll(".strip-cells button")].map(b => [b.dataset.jump, b]));
+  storyObs = new IntersectionObserver(entries => entries.forEach(en => {
+    if (!en.isIntersecting) return;
+    Object.values(cells).forEach(c => c.classList.toggle("cur", c === cells[en.target.dataset.id]));
+  }), { rootMargin: "-40% 0px -55% 0px" });
+  app.querySelectorAll(".qsec").forEach(s => storyObs.observe(s));
+}
+
+document.addEventListener("keydown", ev => {
+  const m = currentRoute.match(/^#\/q\/(.+)$/);
+  if (!m || ev.target.closest("input, textarea, select")) return;
+  const i = QUERY_IDS.indexOf(m[1]);
+  if (ev.key === "ArrowLeft" && i > 0) go(`#/q/${QUERY_IDS[i - 1]}`);
+  if (ev.key === "ArrowRight" && i < QUERY_IDS.length - 1) go(`#/q/${QUERY_IDS[i + 1]}`);
+});
+
+// ---------- router ----------
+// Navigation is handled in-page (links are intercepted) so it also works where
+// the page can't rely on the URL hash, e.g. when embedded; history is best-effort.
+let currentRoute = /^#\/[\w/]*$/.test(location.hash) ? location.hash : "#/";
+function go(h) {
+  if (h === currentRoute) return;
+  currentRoute = h;
+  try { history.pushState(null, "", h); } catch (e) {}
+  route();
+}
+document.addEventListener("click", ev => {
+  const a = ev.target.closest('a[href^="#/"]');
+  if (!a || ev.ctrlKey || ev.metaKey || ev.shiftKey) return;
+  ev.preventDefault();
+  go(a.getAttribute("href"));
+});
+let resizeTimer = 0, lastWidth = innerWidth;
+addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (innerWidth === lastWidth || !DATA) return;
+    lastWidth = innerWidth;
+    document.documentElement.style.setProperty("--hh", $("header.top").offsetHeight + "px");
+    if ($("#dist-chart")) drawDistribution($("#dist-chart"));
+    if ($("#delta-chart")) drawDelta();
+  }, 150);
+});
+addEventListener("popstate", () => {
+  currentRoute = /^#\/[\w/]*$/.test(location.hash) ? location.hash : "#/";
+  route();
+});
+
+function route() {
+  hideTip();
+  if (storyObs) { storyObs.disconnect(); storyObs = null; }
+  const h = currentRoute.replace(/^#/, "") || "/";
+  let tab = "overview";
+  if (h.startsWith("/q/")) { tab = "queries"; renderQuery(decodeURIComponent(h.slice(3))); }
+  else if (h === "/queries") { tab = "queries"; renderQueries(); }
+  else if (h === "/story") { tab = "story"; renderStory(); }
+  else renderOverview();
+  document.querySelectorAll("nav.tabs a").forEach(a => a.classList.toggle("active", a.dataset.tab === tab));
+  window.scrollTo(0, 0);
+}
+
+// The exported standalone page embeds the bundle; the local server serves it from /api/data
+const embedded = document.getElementById("embedded-data");
+(embedded ? Promise.resolve(JSON.parse(embedded.textContent))
+  : fetch("api/data").then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }))
+  .then(d => {
+    DATA = d;
+    PIPES.forEach(p => { BYQ[p] = {}; d.pipelines[p].per_query.forEach(q => { BYQ[p][q.query_id] = q; }); });
+    QUERY_IDS = d.pipelines.basic_hybrid.per_query.map(q => q.query_id);
+    const md = d.metadata;
+    $("#meta-line").textContent = `${md.query_count} queries · ${md.product_count.toLocaleString()} products · 3 pipelines`;
+    route();
+  })
+  .catch(err => {
+    $("#app").innerHTML = `<p class="empty err">Could not load results (${esc(err.message)}). Start the viewer with <code>python webui/serve.py</code> from the project root.</p>`;
+  });
+</script>
+</body>
+</html>

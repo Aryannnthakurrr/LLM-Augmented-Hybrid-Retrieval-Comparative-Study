@@ -1,0 +1,26 @@
+# Virtual environment
+.venv/
+
+# Python bytecode
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# Runtime logs (regenerated on each run)
+logs/
+
+# College submission material: kept locally, never published
+report/
+*.pdf
+
+# Local assistant and editor settings
+CLAUDE.md
+.claude/
+
+# OS and archive leftovers
+__MACOSX/
+.DS_Store
+._*
+# Mis-decoded duplicates of the four "façade" cache files, left by a zip extraction
+.cache/llm/*Γö£┬║*
+.cache/llm/*╠º*
